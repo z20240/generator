@@ -6,9 +6,9 @@ var minimatch = require('minimatch')
 var mkdirp = require('mkdirp')
 var path = require('path')
 var program = require('commander')
-var readline = require('readline')
 var sortedObject = require('sorted-object')
 var util = require('util')
+var inquirer = require('inquirer')
 
 var MODE_0666 = parseInt('0666', 8)
 var MODE_0755 = parseInt('0755', 8)
@@ -48,13 +48,35 @@ program
   .name('express')
   .version(VERSION, '    --version')
   .usage('[options] [dir]')
-  .option('-e, --ejs', 'add ejs engine support', renamedOption('--ejs', '--view=ejs'))
-  .option('    --pug', 'add pug engine support', renamedOption('--pug', '--view=pug'))
-  .option('    --hbs', 'add handlebars engine support', renamedOption('--hbs', '--view=hbs'))
-  .option('-H, --hogan', 'add hogan.js engine support', renamedOption('--hogan', '--view=hogan'))
-  .option('-v, --view <engine>', 'add view <engine> support (dust|ejs|hbs|hjs|jade|pug|twig|vash) (defaults to jade)')
+  .option(
+    '-e, --ejs',
+    'add ejs engine support',
+    renamedOption('--ejs', '--view=ejs')
+  )
+  .option(
+    '    --pug',
+    'add pug engine support',
+    renamedOption('--pug', '--view=pug')
+  )
+  .option(
+    '    --hbs',
+    'add handlebars engine support',
+    renamedOption('--hbs', '--view=hbs')
+  )
+  .option(
+    '-H, --hogan',
+    'add hogan.js engine support',
+    renamedOption('--hogan', '--view=hogan')
+  )
+  .option(
+    '-v, --view <engine>',
+    'add view <engine> support (dust|ejs|hbs|hjs|jade|pug|twig|vash) (defaults to jade)'
+  )
   .option('    --no-view', 'use static html instead of view engine')
-  .option('-c, --css <engine>', 'add stylesheet <engine> support (less|stylus|compass|sass) (defaults to plain css)')
+  .option(
+    '-c, --css <engine>',
+    'add stylesheet <engine> support (less|stylus|compass|sass) (defaults to plain css)'
+  )
   .option('    --git', 'add .gitignore')
   .option('-f, --force', 'force on non-empty directory')
   .parse(process.argv)
@@ -94,20 +116,37 @@ function before (obj, method, fn) {
  * Prompt for confirmation on STDOUT/STDIN
  */
 
-function confirm (msg, callback) {
-  var rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout
-  })
+const confirm = async (msg) => {
+  const answer = await inquirer.prompt([
+    {
+      name: 'yon',
+      type: 'input',
+      message: msg,
+      filter: (val) => val.toLowerCase()
+    }
+  ])
 
-  rl.question(msg, function (input) {
-    rl.close()
-    callback(/^y|yes|ok|true$/i.test(input))
-  })
+  return answer.yon === 'y'
+}
+
+const optionSelector = async ({ name, question, list }) => {
+  const answer = await inquirer.prompt([
+    {
+      name: name,
+      type: 'list',
+      message: question,
+      default: list[0],
+      choices: list
+    }
+  ])
+
+  return answer
 }
 
 /**
  * Copy file from template directory.
+ * @param {string} from
+ * @param {string} to
  */
 
 function copyTemplate (from, to) {
@@ -133,26 +172,20 @@ function copyTemplateMulti (fromDir, toDir, nameGlob) {
  * @param {string} dir
  */
 
-function createApplication (name, dir) {
+async function createApplication (name, dir) {
   console.log()
 
   // Package
-  var pkg = {
-    name: name,
-    version: '0.0.0',
-    private: true,
-    scripts: {
-      start: 'node ./bin/www'
-    },
-    dependencies: {
-      'debug': '~2.6.9',
-      'express': '~4.16.1'
-    }
-  }
+  let pkg = require('../templates/config/package.json')
+  pkg = { name, ...pkg }
+
+  // tsconfig
+  let tsconfig = require('../templates/config/tsconfig.json')
+  const tsconfigBuild = require('../templates/config/tsconfig.build.json')
 
   // JavaScript
-  var app = loadTemplate('js/app.js')
-  var www = loadTemplate('js/www')
+  var app = loadTemplate('ts/app.ts')
+  var www = loadTemplate('ts/www.ts')
 
   // App name
   www.locals.name = name
@@ -177,71 +210,72 @@ function createApplication (name, dir) {
   app.locals.uses.push('cookieParser()')
   pkg.dependencies['cookie-parser'] = '~1.4.4'
 
-  if (dir !== '.') {
-    mkdir(dir, '.')
-  }
+  if (dir !== '.') mkdir(dir, '.')
 
-  mkdir(dir, 'public')
-  mkdir(dir, 'public/javascripts')
-  mkdir(dir, 'public/images')
-  mkdir(dir, 'public/stylesheets')
+  mkdir(dir, 'src')
+  mkdir(dir, 'src/public')
+  mkdir(dir, 'src/public/javascripts')
+  mkdir(dir, 'src/public/images')
+  mkdir(dir, 'src/public/stylesheets')
 
   // copy css templates
   switch (program.css) {
     case 'less':
-      copyTemplateMulti('css', dir + '/public/stylesheets', '*.less')
+      copyTemplateMulti('css', dir + '/src/public/stylesheets', '*.less')
       break
     case 'stylus':
-      copyTemplateMulti('css', dir + '/public/stylesheets', '*.styl')
+      copyTemplateMulti('css', dir + '/src/public/stylesheets', '*.styl')
       break
     case 'compass':
-      copyTemplateMulti('css', dir + '/public/stylesheets', '*.scss')
+      copyTemplateMulti('css', dir + '/src/public/stylesheets', '*.scss')
       break
     case 'sass':
-      copyTemplateMulti('css', dir + '/public/stylesheets', '*.sass')
+      copyTemplateMulti('css', dir + '/src/public/stylesheets', '*.sass')
       break
     default:
-      copyTemplateMulti('css', dir + '/public/stylesheets', '*.css')
+      copyTemplateMulti('css', dir + '/src/public/stylesheets', '*.css')
       break
   }
 
   // copy route templates
-  mkdir(dir, 'routes')
-  copyTemplateMulti('js/routes', dir + '/routes', '*.js')
+  mkdir(dir, 'src')
+  mkdir(dir, 'src/routes')
+  copyTemplateMulti('ts/routes', dir + '/src/routes', '*.ts')
 
   if (program.view) {
     // Copy view templates
-    mkdir(dir, 'views')
+    mkdir(dir, 'src')
+    mkdir(dir, 'src/views')
     pkg.dependencies['http-errors'] = '~1.6.3'
     switch (program.view) {
       case 'dust':
-        copyTemplateMulti('views', dir + '/views', '*.dust')
+        copyTemplateMulti('views', dir + '/src/views', '*.dust')
         break
       case 'ejs':
-        copyTemplateMulti('views', dir + '/views', '*.ejs')
+        copyTemplateMulti('views', dir + '/src/views', '*.ejs')
         break
       case 'hbs':
-        copyTemplateMulti('views', dir + '/views', '*.hbs')
+        copyTemplateMulti('views', dir + '/src/views', '*.hbs')
         break
       case 'hjs':
-        copyTemplateMulti('views', dir + '/views', '*.hjs')
+        copyTemplateMulti('views', dir + '/src/views', '*.hjs')
         break
       case 'jade':
-        copyTemplateMulti('views', dir + '/views', '*.jade')
+        copyTemplateMulti('views', dir + '/src/views', '*.jade')
         break
       case 'pug':
-        copyTemplateMulti('views', dir + '/views', '*.pug')
+        copyTemplateMulti('views', dir + '/src/views', '*.pug')
         break
       case 'twig':
-        copyTemplateMulti('views', dir + '/views', '*.twig')
+        copyTemplateMulti('views', dir + '/src/views', '*.twig')
         break
       case 'vash':
-        copyTemplateMulti('views', dir + '/views', '*.vash')
+        copyTemplateMulti('views', dir + '/src/views', '*.vash')
         break
     }
   } else {
     // Copy extra public files
-    copyTemplate('js/index.html', path.join(dir, 'public/index.html'))
+    copyTemplate('ts/index.html', path.join(dir, 'src/public/index.html'))
   }
 
   // CSS Engine support
@@ -258,7 +292,9 @@ function createApplication (name, dir) {
       break
     case 'sass':
       app.locals.modules.sassMiddleware = 'node-sass-middleware'
-      app.locals.uses.push("sassMiddleware({\n  src: path.join(__dirname, 'public'),\n  dest: path.join(__dirname, 'public'),\n  indentedSyntax: true, // true = .sass and false = .scss\n  sourceMap: true\n})")
+      app.locals.uses.push(
+        "sassMiddleware({\n  src: path.join(__dirname, 'public'),\n  dest: path.join(__dirname, 'public'),\n  indentedSyntax: true, // true = .sass and false = .scss\n  sourceMap: true\n})"
+      )
       pkg.dependencies['node-sass-middleware'] = '0.11.0'
       break
     case 'stylus':
@@ -323,17 +359,51 @@ function createApplication (name, dir) {
   app.locals.uses.push("express.static(path.join(__dirname, 'public'))")
 
   if (program.git) {
-    copyTemplate('js/gitignore', path.join(dir, '.gitignore'))
+    copyTemplate('ts/gitignore', path.join(dir, '.gitignore'))
   }
 
   // sort dependencies like npm(1)
   pkg.dependencies = sortedObject(pkg.dependencies)
 
+  // write typescript
+  const optionName = 'tsverb'
+  const answer = await optionSelector({
+    name: optionName,
+    question: 'which tsconfig version you want to use ?',
+    list: [
+      'recommended',
+      'create-react-app',
+      'cypress',
+      'deno',
+      'docusaurus',
+      'next',
+      'node10',
+      'node12',
+      'node14',
+      'node16',
+      'nuxt',
+      'react-native',
+      'svelte'
+    ]
+  })
+
+  const standerTsconfig = `@tsconfig/${answer[optionName]}`
+  pkg.devDependencies[standerTsconfig] = '^1.0.0'
+  tsconfig = { extends: `${standerTsconfig}/tsconfig.json`, ...tsconfig }
+
   // write files
-  write(path.join(dir, 'app.js'), app.render())
+  write(path.join(dir, 'src/app.ts'), app.render())
   write(path.join(dir, 'package.json'), JSON.stringify(pkg, null, 2) + '\n')
+  write(
+    path.join(dir, 'tsconfig.json'),
+    JSON.stringify(tsconfig, null, 2) + '\n'
+  )
+  write(
+    path.join(dir, 'tsconfig.build.json'),
+    JSON.stringify(tsconfigBuild, null, 2) + '\n'
+  )
   mkdir(dir, 'bin')
-  write(path.join(dir, 'bin/www'), www.render(), MODE_0755)
+  write(path.join(dir, 'bin/www.ts'), www.render(), MODE_0755)
 
   var prompt = launchedFromCmd() ? '>' : '$'
 
@@ -365,7 +435,8 @@ function createApplication (name, dir) {
  */
 
 function createAppName (pathName) {
-  return path.basename(pathName)
+  return path
+    .basename(pathName)
     .replace(/[^A-Za-z0-9.-]+/g, '-')
     .replace(/^[-_.]+|-+$/g, '')
     .toLowerCase()
@@ -378,10 +449,10 @@ function createAppName (pathName) {
  * @param {Function} fn
  */
 
-function emptyDirectory (dir, fn) {
-  fs.readdir(dir, function (err, files) {
+async function emptyDirectory (dir, fn) {
+  await fs.readdir(dir, async function (err, files) {
     if (err && err.code !== 'ENOENT') throw err
-    fn(!files || !files.length)
+    await fn(!files || !files.length)
   })
 }
 
@@ -394,7 +465,7 @@ function exit (code) {
   // https://github.com/joyent/node/issues/6247 is just one bug example
   // https://github.com/visionmedia/mocha/issues/333 has a good discussion
   function done () {
-    if (!(draining--)) _exit(code)
+    if (!draining--) _exit(code)
   }
 
   var draining = 0
@@ -416,8 +487,7 @@ function exit (code) {
  */
 
 function launchedFromCmd () {
-  return process.platform === 'win32' &&
-    process.env._ === undefined
+  return process.platform === 'win32' && process.env._ === undefined
 }
 
 /**
@@ -425,7 +495,10 @@ function launchedFromCmd () {
  */
 
 function loadTemplate (name) {
-  var contents = fs.readFileSync(path.join(__dirname, '..', 'templates', (name + '.ejs')), 'utf-8')
+  var contents = fs.readFileSync(
+    path.join(__dirname, '..', 'templates', name + '.ejs'),
+    'utf-8'
+  )
   var locals = Object.create(null)
 
   function render () {
@@ -444,7 +517,7 @@ function loadTemplate (name) {
  * Main program.
  */
 
-function main () {
+async function main () {
   // Path
   var destinationPath = program.args.shift() || '.'
 
@@ -461,26 +534,29 @@ function main () {
 
   // Default view engine
   if (program.view === true) {
-    warning('the default view engine will not be jade in future releases\n' +
-      "use `--view=jade' or `--help' for additional options")
+    warning(
+      'the default view engine will not be jade in future releases\n' +
+        "use `--view=jade' or `--help' for additional options"
+    )
     program.view = 'jade'
   }
 
   // Generate application
-  emptyDirectory(destinationPath, function (empty) {
+  await emptyDirectory(destinationPath, async function (empty) {
     if (empty || program.force) {
-      createApplication(appName, destinationPath)
-    } else {
-      confirm('destination is not empty, continue? [y/N] ', function (ok) {
-        if (ok) {
-          process.stdin.destroy()
-          createApplication(appName, destinationPath)
-        } else {
-          console.error('aborting')
-          exit(1)
-        }
-      })
+      await createApplication(appName, destinationPath)
+      return
     }
+
+    const ok = await confirm('destination is not empty, continue? [y/N] ')
+
+    if (ok) {
+      await createApplication(appName, destinationPath)
+      return
+    }
+
+    console.error('aborting')
+    exit(1)
   })
 }
 
@@ -507,7 +583,9 @@ function mkdir (base, dir) {
 
 function renamedOption (originalName, newName) {
   return function (val) {
-    warning(util.format("option `%s' has been renamed to `%s'", originalName, newName))
+    warning(
+      util.format("option `%s' has been renamed to `%s'", originalName, newName)
+    )
     return val
   }
 }

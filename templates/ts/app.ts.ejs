@@ -1,0 +1,77 @@
+<% if (view) { -%>
+import createError from 'http-errors';
+<% } -%>
+
+import express, { RequestHandler, <% if (view) { -%> ErrorRequestHandler <% } -%> } from "express";
+import path from 'path';
+<% Object.keys(modules).sort().forEach(function (variable) { -%>
+import <%- variable %> from '<%- modules[variable] %>';
+<% }); -%>
+
+<% Object.keys(localModules).sort().forEach(function (variable) { -%>
+import <%- variable %> from '<%- localModules[variable] %>';
+<% }); -%>
+
+class App {
+  public app: express.Application;
+
+  constructor() {
+    this.app = express();
+    this.config();
+    this.routerSetup();
+<% if (view) { -%>
+    this.errorHandler();
+<% } -%>
+  }
+
+  private config() {
+<% if (view) { -%>
+    // view engine setup
+<% if (view.render) { -%>
+    this.app.engine('<%- view.engine %>', <%- view.render %>);
+<% } -%>
+    this.app.set('views', path.join(__dirname, 'views'));
+    this.app.set('view engine', '<%- view.engine %>');
+<% } -%>
+
+<% uses.forEach(function (use) { -%>
+    this.app.use(<%- use %>);
+<% }); -%>
+  }
+
+  private routerSetup() {
+<% mounts.forEach(function (mount) { -%>
+    this.app.use(<%= mount.path %>, <%- mount.code %>);
+<% }); -%>
+  }
+
+<% if (view) { -%>
+  private errorHandler() {
+    // catch 404 and forward to error handler
+    const requestHandler: RequestHandler = function (_req, _res, next) {
+      next(createError(404));
+    };
+    this.app.use(requestHandler);
+
+    // error handler
+    const errorRequestHandler: ErrorRequestHandler = function (
+      err,
+      req,
+      res,
+      _next
+    ) {
+      // set locals, only providing error in development
+      res.locals.message = err.message;
+      res.locals.error = req.app.get("env") === "development" ? err : {};
+
+      // render the error page
+      res.status(err.status || 500);
+      res.render("error");
+    };
+    this.app.use(errorRequestHandler);
+  }
+<% } -%>
+}
+
+export default new App().app;
+
