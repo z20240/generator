@@ -1,4 +1,4 @@
-[![Express Logo](./assets/express-typescript.png)](http://expressjs.com/)
+[![Express Logo](https://raw.githubusercontent.com/z20240/pictureRepository/master/uPic/express-typescript.png?token=ACZYRQWCRQLYSFATS76CGHTBK3IDK)](http://expressjs.com/)
 
 [Express'](https://www.npmjs.com/package/express) application generator with typescript.
 
@@ -6,18 +6,16 @@ This tools is forked from express-generator for people whom want to build an exp
 
 All args of express-generator are provided, you can use it as express-generator.
 
-- Typescript: 4.4
-- Express: 4.16
-
 [![NPM Version][npm-image]][npm-url]
-[![NPM Downloads][downloads-image]][downloads-url]
-[![Linux Build][travis-image]][travis-url]
-[![Windows Build][appveyor-image]][appveyor-url]
+[![Licensee][licensee-image]][npm-url]
+[![Express Version][express-version-image]][express-url]
+[![Typescript Version][typescript-version-image]][typescript-url]
+
 
 ## Installation
 
 ```sh
-$ npm install -g express-generator
+$ npm install -g typescript-express-generator
 ```
 
 ## Quick Start
@@ -27,7 +25,7 @@ The quickest way to get started with express is to utilize the executable `expre
 Create the app:
 
 ```bash
-$ express --view=hbs /tmp/foo && cd /tmp/foo
+$ ts-express --view=hbs /tmp/foo && cd /tmp/foo
 ```
 
 Install dependencies:
@@ -63,10 +61,10 @@ This generator can also be further configured with the following command line fl
 [MIT](LICENSE)
 
 [npm-image]: https://img.shields.io/npm/v/express-generator.svg
-[npm-url]: https://npmjs.org/package/express-generator
-[travis-image]: https://img.shields.io/travis/expressjs/generator/master.svg?label=linux
-[travis-url]: https://travis-ci.org/expressjs/generator
-[appveyor-image]: https://img.shields.io/appveyor/ci/dougwilson/generator/master.svg?label=windows
-[appveyor-url]: https://ci.appveyor.com/project/dougwilson/generator
-[downloads-image]: https://img.shields.io/npm/dm/express-generator.svg
+[licensee-image]: https://img.shields.io/badge/licensee-MIT-green
+[typescript-version-image]: https://img.shields.io/badge/typescript-4.4-blue
+[express-version-image]: https://img.shields.io/badge/express-4.16-green
+[npm-url]: https://npmjs.org/package/typescript-express-generator
 [downloads-url]: https://npmjs.org/package/typescript-express-generator
+[typescript-url]: https://www.typescriptlang.org/
+[express-url]: https://expressjs.com/
