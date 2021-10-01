@@ -6,7 +6,7 @@ This tools is forked from express-generator for people whom want to build an exp
 
 All args of express-generator are provided, you can use it as express-generator.
 
-[![NPM Version][npm-image]][npm-url]
+[![Version][npm-image]][npm-url]
 [![Licensee][licensee-image]][npm-url]
 [![Express Version][express-version-image]][express-url]
 [![Typescript Version][typescript-version-image]][typescript-url]
@@ -60,7 +60,7 @@ This generator can also be further configured with the following command line fl
 
 [MIT](LICENSE)
 
-[npm-image]: https://img.shields.io/npm/v/express-generator.svg
+[npm-image]: https://img.shields.io/npm/v/typescript-express-generator
 [licensee-image]: https://img.shields.io/badge/licensee-MIT-green
 [typescript-version-image]: https://img.shields.io/badge/typescript-4.4-blue
 [express-version-image]: https://img.shields.io/badge/express-4.16-green
