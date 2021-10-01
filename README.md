@@ -1,4 +1,4 @@
-[![Express Logo](https://raw.githubusercontent.com/z20240/pictureRepository/master/uPic/express-typescript.png?token=ACZYRQWCRQLYSFATS76CGHTBK3IDK)](http://expressjs.com/)
+[![Express Logo](https://github.com/z20240/generator/blob/master/assets/express-typescript.png)
 
 [Express'](https://www.npmjs.com/package/express) application generator with typescript.
 
