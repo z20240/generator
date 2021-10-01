@@ -1,7 +1,7 @@
 {
   "name": "typescript-express-generator",
   "description": "Express' application generator with typescript",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "author": "z20240 <z20240z@gmail.com>",
   "contributors": [],
   "keywords": [
