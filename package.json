@@ -1,11 +1,12 @@
 {
-  "name": "express-typescript-generator",
+  "name": "typescript-express-generator",
   "description": "Express' application generator with typescript",
   "version": "1.0.0",
   "author": "z20240 <z20240z@gmail.com>",
   "contributors": [],
   "keywords": [
     "express",
+    "typescript",
     "framework",
     "web",
     "rest",
@@ -27,7 +28,7 @@
   "main": "bin/express-cli.js",
   "preferGlobal": true,
   "bin": {
-    "express": "./bin/express-cli.js"
+    "ts-express": "./bin/express-cli.js"
   },
   "devDependencies": {
     "eslint": "5.16.0",

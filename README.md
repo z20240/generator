@@ -1,6 +1,13 @@
-[![Express Logo](https://i.cloudup.com/zfY6lL7eFa-3000x3000.png)](http://expressjs.com/)
+[![Express Logo](./assets/express-typescript.png)](http://expressjs.com/)
 
-[Express'](https://www.npmjs.com/package/express) application generator.
+[Express'](https://www.npmjs.com/package/express) application generator with typescript.
+
+This tools is forked from express-generator for people whom want to build an express project with typescript.
+
+All args of express-generator are provided, you can use it as express-generator.
+
+- Typescript: 4.4
+- Express: 4.16
 
 [![NPM Version][npm-image]][npm-url]
 [![NPM Downloads][downloads-image]][downloads-url]
@@ -62,4 +69,4 @@ This generator can also be further configured with the following command line fl
 [appveyor-image]: https://img.shields.io/appveyor/ci/dougwilson/generator/master.svg?label=windows
 [appveyor-url]: https://ci.appveyor.com/project/dougwilson/generator
 [downloads-image]: https://img.shields.io/npm/dm/express-generator.svg
-[downloads-url]: https://npmjs.org/package/express-generator
+[downloads-url]: https://npmjs.org/package/typescript-express-generator

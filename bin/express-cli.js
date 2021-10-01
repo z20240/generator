@@ -404,6 +404,8 @@ async function createApplication (name, dir) {
   )
   mkdir(dir, 'bin')
   write(path.join(dir, 'bin/www.ts'), www.render(), MODE_0755)
+  mkdir(dir, 'etc')
+  copyTemplate(path.join('etc', 'build.sh'), path.join(dir, 'etc', 'build.sh'))
 
   var prompt = launchedFromCmd() ? '>' : '$'
 
