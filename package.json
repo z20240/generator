@@ -1,7 +1,7 @@
 {
   "name": "typescript-express-generator",
   "description": "Express' application generator with typescript",
-  "version": "1.0.1",
+  "version": "1.0.3",
   "author": "z20240 <z20240z@gmail.com>",
   "contributors": [],
   "keywords": [
@@ -15,7 +15,7 @@
     "app",
     "api"
   ],
-  "repository": "z20240/generator",
+  "repository": "z20240/typescript-express-generator",
   "license": "MIT",
   "dependencies": {
     "commander": "2.15.1",
