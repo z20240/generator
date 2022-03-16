@@ -2,7 +2,7 @@
 import createError from 'http-errors';
 <% } -%>
 
-import express, { RequestHandler, <% if (view) { -%> ErrorRequestHandler <% } -%> } from "express";
+import express, { RequestHandler,<% if (view) { -%> ErrorRequestHandler <% } -%> } from 'express';
 import path from 'path';
 <% Object.keys(modules).sort().forEach(function (variable) { -%>
 import <%- variable %> from '<%- modules[variable] %>';
