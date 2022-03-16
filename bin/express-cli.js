@@ -1,115 +1,93 @@
 #!/usr/bin/env node
 
-var ejs = require('ejs')
-var fs = require('fs')
-var minimatch = require('minimatch')
-var mkdirp = require('mkdirp')
-var path = require('path')
-var program = require('commander')
-var sortedObject = require('sorted-object')
-var util = require('util')
-var inquirer = require('inquirer')
+var ejs = require('ejs');
+var fs = require('fs');
+var minimatch = require('minimatch');
+var mkdirp = require('mkdirp');
+var path = require('path');
+var program = require('commander');
+var sortedObject = require('sorted-object');
+var util = require('util');
+var inquirer = require('inquirer');
 
-var MODE_0666 = parseInt('0666', 8)
-var MODE_0755 = parseInt('0755', 8)
-var TEMPLATE_DIR = path.join(__dirname, '..', 'templates')
-var VERSION = require('../package').version
+var MODE_0666 = parseInt('0666', 8);
+var MODE_0755 = parseInt('0755', 8);
+var TEMPLATE_DIR = path.join(__dirname, '..', 'templates');
+var VERSION = require('../package').version;
 
-var _exit = process.exit
+var _exit = process.exit;
 
 // Re-assign process.exit because of commander
 // TODO: Switch to a different command framework
-process.exit = exit
+process.exit = exit;
 
 // CLI
 
 around(program, 'optionMissingArgument', function (fn, args) {
-  program.outputHelp()
-  fn.apply(this, args)
-  return { args: [], unknown: [] }
-})
+  program.outputHelp();
+  fn.apply(this, args);
+  return { args: [], unknown: [] };
+});
 
 before(program, 'outputHelp', function () {
   // track if help was shown for unknown option
-  this._helpShown = true
-})
+  this._helpShown = true;
+});
 
 before(program, 'unknownOption', function () {
   // allow unknown options if help was shown, to prevent trailing error
-  this._allowUnknownOption = this._helpShown
+  this._allowUnknownOption = this._helpShown;
 
   // show help if not yet shown
   if (!this._helpShown) {
-    program.outputHelp()
+    program.outputHelp();
   }
-})
+});
 
 program
   .name('express')
   .version(VERSION, '    --version')
   .usage('[options] [dir]')
-  .option(
-    '-e, --ejs',
-    'add ejs engine support',
-    renamedOption('--ejs', '--view=ejs')
-  )
-  .option(
-    '    --pug',
-    'add pug engine support',
-    renamedOption('--pug', '--view=pug')
-  )
-  .option(
-    '    --hbs',
-    'add handlebars engine support',
-    renamedOption('--hbs', '--view=hbs')
-  )
-  .option(
-    '-H, --hogan',
-    'add hogan.js engine support',
-    renamedOption('--hogan', '--view=hogan')
-  )
-  .option(
-    '-v, --view <engine>',
-    'add view <engine> support (dust|ejs|hbs|hjs|jade|pug|twig|vash) (defaults to jade)'
-  )
+  .option('-e, --ejs', 'add ejs engine support', renamedOption('--ejs', '--view=ejs'))
+  .option('    --pug', 'add pug engine support', renamedOption('--pug', '--view=pug'))
+  .option('    --hbs', 'add handlebars engine support', renamedOption('--hbs', '--view=hbs'))
+  .option('-H, --hogan', 'add hogan.js engine support', renamedOption('--hogan', '--view=hogan'))
+  .option('-v, --view <engine>', 'add view <engine> support (dust|ejs|hbs|hjs|jade|pug|twig|vash) (defaults to jade)')
   .option('    --no-view', 'use static html instead of view engine')
-  .option(
-    '-c, --css <engine>',
-    'add stylesheet <engine> support (less|stylus|compass|sass) (defaults to plain css)'
-  )
+  .option('-c, --css <engine>', 'add stylesheet <engine> support (less|stylus|compass|sass) (defaults to plain css)')
   .option('    --git', 'add .gitignore')
   .option('-f, --force', 'force on non-empty directory')
-  .parse(process.argv)
+  .parse(process.argv);
 
 if (!exit.exited) {
-  main()
+  main();
 }
 
 /**
  * Install an around function; AOP.
  */
 
-function around (obj, method, fn) {
-  var old = obj[method]
+function around(obj, method, fn) {
+  var old = obj[method];
 
   obj[method] = function () {
-    var args = new Array(arguments.length)
-    for (var i = 0; i < args.length; i++) args[i] = arguments[i]
-    return fn.call(this, old, args)
-  }
+    var args = new Array(arguments.length);
+    for (var i = 0; i < args.length; i++) args[i] = arguments[i];
+    return fn.call(this, old, args);
+  };
 }
 
 /**
  * Install a before function; AOP.
  */
 
-function before (obj, method, fn) {
-  var old = obj[method]
+function before(obj, method, fn) {
+  var old = obj[method];
 
   obj[method] = function () {
-    fn.call(this)
-    old.apply(this, arguments)
-  }
+    fn.call(this);
+    old.apply(this, arguments);
+  };
 }
 
 /**
@@ -124,10 +102,10 @@ const confirm = async (msg) => {
       message: msg,
       filter: (val) => val.toLowerCase()
     }
-  ])
+  ]);
 
-  return answer.yon === 'y'
-}
+  return answer.yon === 'y';
+};
 
 const optionSelector = async ({ name, question, list }) => {
   const answer = await inquirer.prompt([
@@ -138,10 +116,10 @@ const optionSelector = async ({ name, question, list }) => {
       default: list[0],
       choices: list
     }
-  ])
+  ]);
 
-  return answer
-}
+  return answer;
+};
 
 /**
  * Copy file from template directory.
@@ -149,20 +127,20 @@ const optionSelector = async ({ name, question, list }) => {
  * @param {string} to
  */
 
-function copyTemplate (from, to) {
-  write(to, fs.readFileSync(path.join(TEMPLATE_DIR, from), 'utf-8'))
+function copyTemplate(from, to) {
+  write(to, fs.readFileSync(path.join(TEMPLATE_DIR, from), 'utf-8'));
 }
 
 /**
  * Copy multiple files from template directory.
  */
 
-function copyTemplateMulti (fromDir, toDir, nameGlob) {
+function copyTemplateMulti(fromDir, toDir, nameGlob) {
   fs.readdirSync(path.join(TEMPLATE_DIR, fromDir))
     .filter(minimatch.filter(nameGlob, { matchBase: true }))
     .forEach(function (name) {
-      copyTemplate(path.join(fromDir, name), path.join(toDir, name))
-    })
+      copyTemplate(path.join(fromDir, name), path.join(toDir, name));
+    });
 }
 
 /**
@@ -172,201 +150,201 @@ function copyTemplateMulti (fromDir, toDir, nameGlob) {
  * @param {string} dir
  */
 
-async function createApplication (name, dir) {
-  console.log()
+async function createApplication(name, dir) {
+  console.log();
 
   // Package
-  let pkg = require('../templates/config/package.json')
-  pkg = { name, ...pkg }
+  let pkg = require('../templates/config/package.json');
+  pkg = { name, ...pkg };
 
   // tsconfig
-  let tsconfig = require('../templates/config/tsconfig.json')
-  const tsconfigBuild = require('../templates/config/tsconfig.build.json')
+  let tsconfig = require('../templates/config/tsconfig.json');
+  const tsconfigBuild = require('../templates/config/tsconfig.build.json');
 
   // JavaScript
-  var app = loadTemplate('ts/app.ts')
-  var www = loadTemplate('ts/www.ts')
+  var app = loadTemplate('ts/app.ts');
+  var www = loadTemplate('ts/www.ts');
 
   // App name
-  www.locals.name = name
+  www.locals.name = name;
 
   // App modules
-  app.locals.localModules = Object.create(null)
-  app.locals.modules = Object.create(null)
-  app.locals.mounts = []
-  app.locals.uses = []
+  app.locals.localModules = Object.create(null);
+  app.locals.modules = Object.create(null);
+  app.locals.mounts = [];
+  app.locals.uses = [];
 
   // Request logger
-  app.locals.modules.logger = 'morgan'
-  app.locals.uses.push("logger('dev')")
-  pkg.dependencies.morgan = '~1.9.1'
+  app.locals.modules.logger = 'morgan';
+  app.locals.uses.push("logger('dev')");
+  pkg.dependencies.morgan = '~1.9.1';
 
   // Body parsers
-  app.locals.uses.push('express.json()')
-  app.locals.uses.push('express.urlencoded({ extended: false })')
+  app.locals.uses.push('express.json()');
+  app.locals.uses.push('express.urlencoded({ extended: false })');
 
   // Cookie parser
-  app.locals.modules.cookieParser = 'cookie-parser'
-  app.locals.uses.push('cookieParser()')
-  pkg.dependencies['cookie-parser'] = '~1.4.4'
+  app.locals.modules.cookieParser = 'cookie-parser';
+  app.locals.uses.push('cookieParser()');
+  pkg.dependencies['cookie-parser'] = '~1.4.4';
 
-  if (dir !== '.') mkdir(dir, '.')
+  if (dir !== '.') mkdir(dir, '.');
 
-  mkdir(dir, 'src')
-  mkdir(dir, 'src/public')
-  mkdir(dir, 'src/public/javascripts')
-  mkdir(dir, 'src/public/images')
-  mkdir(dir, 'src/public/stylesheets')
+  mkdir(dir, 'src');
+  mkdir(dir, 'src/public');
+  mkdir(dir, 'src/public/javascripts');
+  mkdir(dir, 'src/public/images');
+  mkdir(dir, 'src/public/stylesheets');
 
   // copy css templates
   switch (program.css) {
     case 'less':
-      copyTemplateMulti('css', dir + '/src/public/stylesheets', '*.less')
-      break
+      copyTemplateMulti('css', dir + '/src/public/stylesheets', '*.less');
+      break;
     case 'stylus':
-      copyTemplateMulti('css', dir + '/src/public/stylesheets', '*.styl')
-      break
+      copyTemplateMulti('css', dir + '/src/public/stylesheets', '*.styl');
+      break;
     case 'compass':
-      copyTemplateMulti('css', dir + '/src/public/stylesheets', '*.scss')
-      break
+      copyTemplateMulti('css', dir + '/src/public/stylesheets', '*.scss');
+      break;
     case 'sass':
-      copyTemplateMulti('css', dir + '/src/public/stylesheets', '*.sass')
-      break
+      copyTemplateMulti('css', dir + '/src/public/stylesheets', '*.sass');
+      break;
     default:
-      copyTemplateMulti('css', dir + '/src/public/stylesheets', '*.css')
-      break
+      copyTemplateMulti('css', dir + '/src/public/stylesheets', '*.css');
+      break;
   }
 
   // copy route templates
-  mkdir(dir, 'src')
-  mkdir(dir, 'src/routes')
-  copyTemplateMulti('ts/routes', dir + '/src/routes', '*.ts')
+  mkdir(dir, 'src');
+  mkdir(dir, 'src/routes');
+  copyTemplateMulti('ts/routes', dir + '/src/routes', '*.ts');
 
   if (program.view) {
     // Copy view templates
-    mkdir(dir, 'src')
-    mkdir(dir, 'src/views')
-    pkg.dependencies['http-errors'] = '~1.6.3'
+    mkdir(dir, 'src');
+    mkdir(dir, 'src/views');
+    pkg.dependencies['http-errors'] = '~1.6.3';
     switch (program.view) {
       case 'dust':
-        copyTemplateMulti('views', dir + '/src/views', '*.dust')
-        break
+        copyTemplateMulti('views', dir + '/src/views', '*.dust');
+        break;
       case 'ejs':
-        copyTemplateMulti('views', dir + '/src/views', '*.ejs')
-        break
+        copyTemplateMulti('views', dir + '/src/views', '*.ejs');
+        break;
       case 'hbs':
-        copyTemplateMulti('views', dir + '/src/views', '*.hbs')
-        break
+        copyTemplateMulti('views', dir + '/src/views', '*.hbs');
+        break;
       case 'hjs':
-        copyTemplateMulti('views', dir + '/src/views', '*.hjs')
-        break
+        copyTemplateMulti('views', dir + '/src/views', '*.hjs');
+        break;
       case 'jade':
-        copyTemplateMulti('views', dir + '/src/views', '*.jade')
-        break
+        copyTemplateMulti('views', dir + '/src/views', '*.jade');
+        break;
       case 'pug':
-        copyTemplateMulti('views', dir + '/src/views', '*.pug')
-        break
+        copyTemplateMulti('views', dir + '/src/views', '*.pug');
+        break;
       case 'twig':
-        copyTemplateMulti('views', dir + '/src/views', '*.twig')
-        break
+        copyTemplateMulti('views', dir + '/src/views', '*.twig');
+        break;
       case 'vash':
-        copyTemplateMulti('views', dir + '/src/views', '*.vash')
-        break
+        copyTemplateMulti('views', dir + '/src/views', '*.vash');
+        break;
     }
   } else {
     // Copy extra public files
-    copyTemplate('ts/index.html', path.join(dir, 'src/public/index.html'))
+    copyTemplate('ts/index.html', path.join(dir, 'src/public/index.html'));
   }
 
   // CSS Engine support
   switch (program.css) {
     case 'compass':
-      app.locals.modules.compass = 'node-compass'
-      app.locals.uses.push("compass({ mode: 'expanded' })")
-      pkg.dependencies['node-compass'] = '0.2.3'
-      break
+      app.locals.modules.compass = 'node-compass';
+      app.locals.uses.push("compass({ mode: 'expanded' })");
+      pkg.dependencies['node-compass'] = '0.2.3';
+      break;
     case 'less':
-      app.locals.modules.lessMiddleware = 'less-middleware'
-      app.locals.uses.push("lessMiddleware(path.join(__dirname, 'public'))")
-      pkg.dependencies['less-middleware'] = '~2.2.1'
-      break
+      app.locals.modules.lessMiddleware = 'less-middleware';
+      app.locals.uses.push("lessMiddleware(path.join(__dirname, 'public'))");
+      pkg.dependencies['less-middleware'] = '~2.2.1';
+      break;
     case 'sass':
-      app.locals.modules.sassMiddleware = 'node-sass-middleware'
+      app.locals.modules.sassMiddleware = 'node-sass-middleware';
       app.locals.uses.push(
         "sassMiddleware({\n  src: path.join(__dirname, 'public'),\n  dest: path.join(__dirname, 'public'),\n  indentedSyntax: true, // true = .sass and false = .scss\n  sourceMap: true\n})"
-      )
-      pkg.dependencies['node-sass-middleware'] = '0.11.0'
-      break
+      );
+      pkg.dependencies['node-sass-middleware'] = '0.11.0';
+      break;
     case 'stylus':
-      app.locals.modules.stylus = 'stylus'
-      app.locals.uses.push("stylus.middleware(path.join(__dirname, 'public'))")
-      pkg.dependencies['stylus'] = '0.54.5'
-      break
+      app.locals.modules.stylus = 'stylus';
+      app.locals.uses.push("stylus.middleware(path.join(__dirname, 'public'))");
+      pkg.dependencies['stylus'] = '0.54.5';
+      break;
   }
 
   // Index router mount
-  app.locals.localModules.indexRouter = './routes/index'
-  app.locals.mounts.push({ path: '/', code: 'indexRouter' })
+  app.locals.localModules.indexRouter = './routes/index';
+  app.locals.mounts.push({ path: '/', code: 'indexRouter' });
 
   // User router mount
-  app.locals.localModules.usersRouter = './routes/users'
-  app.locals.mounts.push({ path: '/users', code: 'usersRouter' })
+  app.locals.localModules.usersRouter = './routes/users';
+  app.locals.mounts.push({ path: '/users', code: 'usersRouter' });
 
   // Template support
   switch (program.view) {
     case 'dust':
-      app.locals.modules.adaro = 'adaro'
+      app.locals.modules.adaro = 'adaro';
       app.locals.view = {
         engine: 'dust',
         render: 'adaro.dust()'
-      }
-      pkg.dependencies.adaro = '~1.0.4'
-      break
+      };
+      pkg.dependencies.adaro = '~1.0.4';
+      break;
     case 'ejs':
-      app.locals.view = { engine: 'ejs' }
-      pkg.dependencies.ejs = '~2.6.1'
-      break
+      app.locals.view = { engine: 'ejs' };
+      pkg.dependencies.ejs = '~2.6.1';
+      break;
     case 'hbs':
-      app.locals.view = { engine: 'hbs' }
-      pkg.dependencies.hbs = '~4.0.4'
-      break
+      app.locals.view = { engine: 'hbs' };
+      pkg.dependencies.hbs = '~4.0.4';
+      break;
     case 'hjs':
-      app.locals.view = { engine: 'hjs' }
-      pkg.dependencies.hjs = '~0.0.6'
-      break
+      app.locals.view = { engine: 'hjs' };
+      pkg.dependencies.hjs = '~0.0.6';
+      break;
     case 'jade':
-      app.locals.view = { engine: 'jade' }
-      pkg.dependencies.jade = '~1.11.0'
-      break
+      app.locals.view = { engine: 'jade' };
+      pkg.dependencies.jade = '~1.11.0';
+      break;
     case 'pug':
-      app.locals.view = { engine: 'pug' }
-      pkg.dependencies.pug = '2.0.0-beta11'
-      break
+      app.locals.view = { engine: 'pug' };
+      pkg.dependencies.pug = '2.0.0-beta11';
+      break;
     case 'twig':
-      app.locals.view = { engine: 'twig' }
-      pkg.dependencies.twig = '~0.10.3'
-      break
+      app.locals.view = { engine: 'twig' };
+      pkg.dependencies.twig = '~0.10.3';
+      break;
     case 'vash':
-      app.locals.view = { engine: 'vash' }
-      pkg.dependencies.vash = '~0.12.6'
-      break
+      app.locals.view = { engine: 'vash' };
+      pkg.dependencies.vash = '~0.12.6';
+      break;
     default:
-      app.locals.view = false
-      break
+      app.locals.view = false;
+      break;
   }
 
   // Static files
-  app.locals.uses.push("express.static(path.join(__dirname, 'public'))")
+  app.locals.uses.push("express.static(path.join(__dirname, 'public'))");
 
   if (program.git) {
-    copyTemplate('ts/gitignore', path.join(dir, '.gitignore'))
+    copyTemplate('ts/gitignore', path.join(dir, '.gitignore'));
   }
 
   // sort dependencies like npm(1)
-  pkg.dependencies = sortedObject(pkg.dependencies)
+  pkg.dependencies = sortedObject(pkg.dependencies);
 
   // write typescript
-  const optionName = 'tsverb'
+  const optionName = 'tsverb';
   const answer = await optionSelector({
     name: optionName,
     question: 'which tsconfig version you want to use ?',
@@ -385,49 +363,43 @@ async function createApplication (name, dir) {
       'react-native',
       'svelte'
     ]
-  })
+  });
 
-  const standerTsconfig = `@tsconfig/${answer[optionName]}`
-  pkg.devDependencies[standerTsconfig] = '^1.0.0'
-  tsconfig = { extends: `${standerTsconfig}/tsconfig.json`, ...tsconfig }
+  const standerTsconfig = `@tsconfig/${answer[optionName]}`;
+  pkg.devDependencies[standerTsconfig] = '^1.0.0';
+  tsconfig = { extends: `${standerTsconfig}/tsconfig.json`, ...tsconfig };
 
   // write files
-  write(path.join(dir, 'src/app.ts'), app.render())
-  write(path.join(dir, 'package.json'), JSON.stringify(pkg, null, 2) + '\n')
-  write(
-    path.join(dir, 'tsconfig.json'),
-    JSON.stringify(tsconfig, null, 2) + '\n'
-  )
-  write(
-    path.join(dir, 'tsconfig.build.json'),
-    JSON.stringify(tsconfigBuild, null, 2) + '\n'
-  )
-  mkdir(dir, 'bin')
-  write(path.join(dir, 'bin/www.ts'), www.render(), MODE_0755)
-  mkdir(dir, 'etc')
-  copyTemplate(path.join('etc', 'build.sh'), path.join(dir, 'etc', 'build.sh'))
+  write(path.join(dir, 'src/app.ts'), app.render());
+  write(path.join(dir, 'package.json'), JSON.stringify(pkg, null, 2) + '\n');
+  write(path.join(dir, 'tsconfig.json'), JSON.stringify(tsconfig, null, 2) + '\n');
+  write(path.join(dir, 'tsconfig.build.json'), JSON.stringify(tsconfigBuild, null, 2) + '\n');
+  mkdir(dir, 'bin');
+  write(path.join(dir, 'bin/www.ts'), www.render(), MODE_0755);
+  mkdir(dir, 'etc');
+  copyTemplate(path.join('etc', 'build.sh'), path.join(dir, 'etc', 'build.sh'));
 
-  var prompt = launchedFromCmd() ? '>' : '$'
+  var prompt = launchedFromCmd() ? '>' : '$';
 
   if (dir !== '.') {
-    console.log()
-    console.log('   change directory:')
-    console.log('     %s cd %s', prompt, dir)
+    console.log();
+    console.log('   change directory:');
+    console.log('     %s cd %s', prompt, dir);
   }
 
-  console.log()
-  console.log('   install dependencies:')
-  console.log('     %s npm install', prompt)
-  console.log()
-  console.log('   run the app:')
+  console.log();
+  console.log('   install dependencies:');
+  console.log('     %s npm install', prompt);
+  console.log();
+  console.log('   run the app:');
 
   if (launchedFromCmd()) {
-    console.log('     %s SET DEBUG=%s:* & npm start', prompt, name)
+    console.log('     %s SET DEBUG=%s:* & npm start', prompt, name);
   } else {
-    console.log('     %s DEBUG=%s:* npm start', prompt, name)
+    console.log('     %s DEBUG=%s:* npm start', prompt, name);
   }
 
-  console.log()
+  console.log();
 }
 
 /**
@@ -436,12 +408,12 @@ async function createApplication (name, dir) {
  * @param {String} pathName
  */
 
-function createAppName (pathName) {
+function createAppName(pathName) {
   return path
     .basename(pathName)
     .replace(/[^A-Za-z0-9.-]+/g, '-')
     .replace(/^[-_.]+|-+$/g, '')
-    .toLowerCase()
+    .toLowerCase();
 }
 
 /**
@@ -451,115 +423,110 @@ function createAppName (pathName) {
  * @param {Function} fn
  */
 
-async function emptyDirectory (dir, fn) {
+async function emptyDirectory(dir, fn) {
   await fs.readdir(dir, async function (err, files) {
-    if (err && err.code !== 'ENOENT') throw err
-    await fn(!files || !files.length)
-  })
+    if (err && err.code !== 'ENOENT') throw err;
+    await fn(!files || !files.length);
+  });
 }
 
 /**
  * Graceful exit for async STDIO
  */
 
-function exit (code) {
+function exit(code) {
   // flush output for Node.js Windows pipe bug
   // https://github.com/joyent/node/issues/6247 is just one bug example
   // https://github.com/visionmedia/mocha/issues/333 has a good discussion
-  function done () {
-    if (!draining--) _exit(code)
+  function done() {
+    if (!draining--) _exit(code);
   }
 
-  var draining = 0
-  var streams = [process.stdout, process.stderr]
+  var draining = 0;
+  var streams = [process.stdout, process.stderr];
 
-  exit.exited = true
+  exit.exited = true;
 
   streams.forEach(function (stream) {
     // submit empty write request and wait for completion
-    draining += 1
-    stream.write('', done)
-  })
+    draining += 1;
+    stream.write('', done);
+  });
 
-  done()
+  done();
 }
 
 /**
  * Determine if launched from cmd.exe
  */
 
-function launchedFromCmd () {
-  return process.platform === 'win32' && process.env._ === undefined
+function launchedFromCmd() {
+  return process.platform === 'win32' && process.env._ === undefined;
 }
 
 /**
  * Load template file.
  */
 
-function loadTemplate (name) {
-  var contents = fs.readFileSync(
-    path.join(__dirname, '..', 'templates', name + '.ejs'),
-    'utf-8'
-  )
-  var locals = Object.create(null)
+function loadTemplate(name) {
+  var contents = fs.readFileSync(path.join(__dirname, '..', 'templates', name + '.ejs'), 'utf-8');
+  var locals = Object.create(null);
 
-  function render () {
+  function render() {
     return ejs.render(contents, locals, {
       escape: util.inspect
-    })
+    });
   }
 
   return {
     locals: locals,
     render: render
-  }
+  };
 }
 
 /**
  * Main program.
  */
 
-async function main () {
+async function main() {
   // Path
-  var destinationPath = program.args.shift() || '.'
+  var destinationPath = program.args.shift() || '.';
 
   // App name
-  var appName = createAppName(path.resolve(destinationPath)) || 'hello-world'
+  var appName = createAppName(path.resolve(destinationPath)) || 'hello-world';
 
   // View engine
   if (program.view === true) {
-    if (program.ejs) program.view = 'ejs'
-    if (program.hbs) program.view = 'hbs'
-    if (program.hogan) program.view = 'hjs'
-    if (program.pug) program.view = 'pug'
-  }
+    if (program.ejs) program.view = 'ejs';
+    if (program.hbs) program.view = 'hbs';
+    if (program.hogan) program.view = 'hjs';
+    if (program.pug) program.view = 'pug';
+    // Default view engine
 
-  // Default view engine
-  if (program.view === true) {
     warning(
       'the default view engine will not be jade in future releases\n' +
         "use `--view=jade' or `--help' for additional options"
-    )
-    program.view = 'jade'
+    );
+    program.view = 'jade';
   }
 
   // Generate application
   await emptyDirectory(destinationPath, async function (empty) {
     if (empty || program.force) {
-      await createApplication(appName, destinationPath)
-      return
+      await createApplication(appName, destinationPath);
+      return;
     }
 
-    const ok = await confirm('destination is not empty, continue? [y/N] ')
+    const ok = await confirm('destination is not empty, continue? [y/N] ');
 
     if (ok) {
-      await createApplication(appName, destinationPath)
-      return
+      await createApplication(appName, destinationPath);
+      return;
     }
 
-    console.error('aborting')
-    exit(1)
-  })
+    console.error('aborting');
+    exit(1);
+  });
 }
 
 /**
@@ -569,11 +536,11 @@ async function main () {
  * @param {string} dir
  */
 
-function mkdir (base, dir) {
-  var loc = path.join(base, dir)
+function mkdir(base, dir) {
+  var loc = path.join(base, dir);
 
-  console.log('   \x1b[36mcreate\x1b[0m : ' + loc + path.sep)
-  mkdirp.sync(loc, MODE_0755)
+  console.log('   \x1b[36mcreate\x1b[0m : ' + loc + path.sep);
+  mkdirp.sync(loc, MODE_0755);
 }
 
 /**
@@ -583,13 +550,11 @@ function mkdir (base, dir) {
  * @param {String} newName
  */
 
-function renamedOption (originalName, newName) {
+function renamedOption(originalName, newName) {
   return function (val) {
-    warning(
-      util.format("option `%s' has been renamed to `%s'", originalName, newName)
-    )
-    return val
-  }
+    warning(util.format("option `%s' has been renamed to `%s'", originalName, newName));
+    return val;
+  };
 }
 
 /**
@@ -598,12 +563,12 @@ function renamedOption (originalName, newName) {
  * @param {String} message
  */
 
-function warning (message) {
-  console.error()
+function warning(message) {
+  console.error();
   message.split('\n').forEach(function (line) {
-    console.error('  warning: %s', line)
-  })
-  console.error()
+    console.error('  warning: %s', line);
+  });
+  console.error();
 }
 
 /**
@@ -613,7 +578,7 @@ function warning (message) {
  * @param {String} str
  */
 
-function write (file, str, mode) {
-  fs.writeFileSync(file, str, { mode: mode || MODE_0666 })
-  console.log('   \x1b[36mcreate\x1b[0m : ' + file)
+function write(file, str, mode) {
+  fs.writeFileSync(file, str, { mode: mode || MODE_0666 });
+  console.log('   \x1b[36mcreate\x1b[0m : ' + file);
 }
