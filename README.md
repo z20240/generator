@@ -2,9 +2,9 @@
 
 [Express'](https://www.npmjs.com/package/express) application generator with typescript.
 
-This tools is forked from express-generator for people whom want to build an express project with typescript.
+This tools is forked from express-generator and already built in some useful libraries such as `nodemon`, and `dotenv` which is handy for people whom want to build an express project with **typescript**.
 
-All args of express-generator are provided, you can use it as express-generator.
+All args of express-generator are provided, you can feel free to use it as express-generator as usual.
 
 [![Version][npm-image]][npm-url]
 [![Licensee][licensee-image]][npm-url]
@@ -25,7 +25,7 @@ The quickest way to get started with express is to utilize the executable `expre
 Create the app:
 
 ```bash
-$ ts-express --view=hbs /tmp/foo && cd /tmp/foo
+$ ts-express --view=ejs your-awesome-project && cd your-awesome-project
 ```
 
 Install dependencies:
