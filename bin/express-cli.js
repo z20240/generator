@@ -196,32 +196,18 @@ async function createApplication(name, dir) {
   mkdir(dir, 'src/public/images');
   mkdir(dir, 'src/public/stylesheets');
 
-  // copy css templates
-  switch (program.css) {
-    case 'less':
-      copyTemplateMulti('css', dir + '/src/public/stylesheets', '*.less');
-      break;
-    case 'stylus':
-      copyTemplateMulti('css', dir + '/src/public/stylesheets', '*.styl');
-      break;
-    case 'compass':
-      copyTemplateMulti('css', dir + '/src/public/stylesheets', '*.scss');
-      break;
-    case 'sass':
-      copyTemplateMulti('css', dir + '/src/public/stylesheets', '*.sass');
-      break;
-    default:
-      copyTemplateMulti('css', dir + '/src/public/stylesheets', '*.css');
-      break;
-  }
-
-  // copy route templates
+  // Copy route templates
   mkdir(dir, 'src');
   mkdir(dir, 'src/routes');
   copyTemplateMulti('ts/routes', dir + '/src/routes', '*.ts');
 
+  // Copy utils templates
+  mkdir(dir, 'src');
+  mkdir(dir, 'src/utils');
+  copyTemplateMulti('ts/utils', dir + '/src/utils', '*.ts');
+
   if (program.view) {
-    // Copy view templates
+    // Copy view templates (if needed)
     mkdir(dir, 'src');
     mkdir(dir, 'src/views');
     pkg.dependencies['http-errors'] = '~1.6.3';
@@ -250,10 +236,32 @@ async function createApplication(name, dir) {
       case 'vash':
         copyTemplateMulti('views', dir + '/src/views', '*.vash');
         break;
+      default:
+        // Copy extra public files
+        copyTemplate('ts/index.html', path.join(dir, 'src/public/index.html'));
     }
   } else {
     // Copy extra public files
     copyTemplate('ts/index.html', path.join(dir, 'src/public/index.html'));
+  }
+
+  // Copy css templates
+  switch (program.css) {
+    case 'less':
+      copyTemplateMulti('css', dir + '/src/public/stylesheets', '*.less');
+      break;
+    case 'stylus':
+      copyTemplateMulti('css', dir + '/src/public/stylesheets', '*.styl');
+      break;
+    case 'compass':
+      copyTemplateMulti('css', dir + '/src/public/stylesheets', '*.scss');
+      break;
+    case 'sass':
+      copyTemplateMulti('css', dir + '/src/public/stylesheets', '*.sass');
+      break;
+    default:
+      copyTemplateMulti('css', dir + '/src/public/stylesheets', '*.css');
+      break;
   }
 
   // CSS Engine support

@@ -6,6 +6,7 @@
     "build": "sh etc/build.sh"
   },
   "dependencies": {
+    "log4js": "latest",
     "debug": "~2.6.9",
     "dotenv": "^16.0.0",
     "express": "~4.16.1",
