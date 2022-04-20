@@ -1,21 +1,23 @@
 #!/usr/bin/env node
 
-var ejs = require('ejs');
-var fs = require('fs');
-var minimatch = require('minimatch');
-var mkdirp = require('mkdirp');
-var path = require('path');
-var program = require('commander');
-var sortedObject = require('sorted-object');
-var util = require('util');
-var inquirer = require('inquirer');
+const ejs = require('ejs');
+const fs = require('fs');
+const minimatch = require('minimatch');
+const mkdirp = require('mkdirp');
+const path = require('path');
+const program = require('commander');
+const sortedObject = require('sorted-object');
+const util = require('util');
+const { execSync } = require('child_process');
 
-var MODE_0666 = parseInt('0666', 8);
-var MODE_0755 = parseInt('0755', 8);
-var TEMPLATE_DIR = path.join(__dirname, '..', 'templates');
-var VERSION = require('../package').version;
+const inquirer = require('inquirer');
 
-var _exit = process.exit;
+const MODE_0666 = parseInt('0666', 8);
+const MODE_0755 = parseInt('0755', 8);
+const TEMPLATE_DIR = path.join(__dirname, '..', 'templates');
+const VERSION = require('../package').version;
+
+const _exit = process.exit;
 
 // Re-assign process.exit because of commander
 // TODO: Switch to a different command framework
@@ -68,11 +70,11 @@ if (!exit.exited) {
  */
 
 function around(obj, method, fn) {
-  var old = obj[method];
+  const old = obj[method];
 
   obj[method] = function () {
-    var args = new Array(arguments.length);
-    for (var i = 0; i < args.length; i++) args[i] = arguments[i];
+    const args = new Array(arguments.length);
+    for (let i = 0; i < args.length; i++) args[i] = arguments[i];
     return fn.call(this, old, args);
   };
 }
@@ -82,7 +84,7 @@ function around(obj, method, fn) {
  */
 
 function before(obj, method, fn) {
-  var old = obj[method];
+  const old = obj[method];
 
   obj[method] = function () {
     fn.call(this);
@@ -162,8 +164,8 @@ async function createApplication(name, dir) {
   const tsconfigBuild = require('../templates/config/tsconfig.build.json');
 
   // JavaScript
-  var app = loadTemplate('ts/app.ts');
-  var www = loadTemplate('ts/www.ts');
+  const app = loadTemplate('ts/app.ts');
+  const www = loadTemplate('ts/www.ts');
 
   // App name
   www.locals.name = name;
@@ -344,9 +346,10 @@ async function createApplication(name, dir) {
   // Static files
   app.locals.uses.push("express.static(path.join(__dirname, 'public'))");
 
-  if (program.git) {
-    copyTemplate('ts/gitignore', path.join(dir, '.gitignore'));
-  }
+  // if (program.git) {
+  if (dir !== '.') execSync(`cd ${dir} && git init`, { stdio: 'inherit' });
+  copyTemplate('ts/gitignore', path.join(dir, '.gitignore'));
+  // }
 
   // sort dependencies like npm(1)
   pkg.dependencies = sortedObject(pkg.dependencies);
@@ -387,13 +390,8 @@ async function createApplication(name, dir) {
   mkdir(dir, 'etc');
   copyTemplate(path.join('etc', 'build.sh'), path.join(dir, 'etc', 'build.sh'));
 
-  var prompt = launchedFromCmd() ? '>' : '$';
-
-  if (dir !== '.') {
-    console.log();
-    console.log('   change directory:');
-    console.log('     %s cd %s', prompt, dir);
-  }
+  // check if win32
+  const prompt = launchedFromCmd() ? '>' : '$';
 
   console.log();
   console.log('   install dependencies:');
@@ -450,8 +448,8 @@ function exit(code) {
     if (!draining--) _exit(code);
   }
 
-  var draining = 0;
-  var streams = [process.stdout, process.stderr];
+  let draining = 0;
+  const streams = [process.stdout, process.stderr];
 
   exit.exited = true;
 
@@ -477,8 +475,8 @@ function launchedFromCmd() {
  */
 
 function loadTemplate(name) {
-  var contents = fs.readFileSync(path.join(__dirname, '..', 'templates', name + '.ejs'), 'utf-8');
-  var locals = Object.create(null);
+  const contents = fs.readFileSync(path.join(__dirname, '..', 'templates', name + '.ejs'), 'utf-8');
+  const locals = Object.create(null);
 
   function render() {
     return ejs.render(contents, locals, {
@@ -498,10 +496,10 @@ function loadTemplate(name) {
 
 async function main() {
   // Path
-  var destinationPath = program.args.shift() || '.';
+  const destinationPath = program.args.shift() || '.';
 
   // App name
-  var appName = createAppName(path.resolve(destinationPath)) || 'hello-world';
+  const appName = createAppName(path.resolve(destinationPath)) || 'hello-world';
 
   // View engine
   if (program.view === true) {
@@ -545,7 +543,7 @@ async function main() {
  */
 
 function mkdir(base, dir) {
-  var loc = path.join(base, dir);
+  const loc = path.join(base, dir);
 
   console.log('   \x1b[36mcreate\x1b[0m : ' + loc + path.sep);
   mkdirp.sync(loc, MODE_0755);

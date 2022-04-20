@@ -2,7 +2,7 @@
 
 [Express'](https://www.npmjs.com/package/express) application generator with typescript.
 
-This tools is forked from express-generator and already built in some useful libraries such as `nodemon`, and `dotenv` which is handy for people whom want to build an express project with **typescript**.
+This tools is forked from express-generator and already built in some useful libraries such as `nodemon`, `log4js`, `dotenv` and `git` which is handy for people whom want to build an express project with **typescript**.
 
 All args of express-generator are provided, you can feel free to use it as express-generator as usual.
 
@@ -52,10 +52,15 @@ This generator can also be further configured with the following command line fl
     -v, --view <engine>  add view <engine> support (dust|ejs|hbs|hjs|jade|pug|twig|vash) (defaults to jade)
         --no-view        use static html instead of view engine
     -c, --css <engine>   add stylesheet <engine> support (less|stylus|compass|sass) (defaults to plain css)
-        --git            add .gitignore
     -f, --force          force on non-empty directory
     -h, --help           output usage information
 
+
+## Change Log
+
+### 2022-04-20
+- Add log4js in to template.
+- Add git in to template by default.
 ## License
 
 [MIT](LICENSE)
